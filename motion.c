@@ -25,6 +25,7 @@
 /* Forward declarations */
 static int motion_init(struct context *cnt);
 static void motion_cleanup(struct context *cnt);
+static int check_threshold(struct context *cnt);
 
 
 /**
@@ -285,6 +286,16 @@ static void context_destroy(struct context *cnt)
 
     free(cnt);
 }
+
+/**
+ * check threshold
+ * check if number of changed pixels is in threshold 
+ * cnt->threshold and cnt->upper_threshold
+ * initial implementation: cnt->current_image->diffs > cnt->threshold
+ */
+ static int check_threshold(struct context *cnt) {
+    return (cnt->current_image->diffs > cnt->threshold);
+ }
 
 /**
  * sig_handler
@@ -1512,7 +1523,7 @@ static void *motion_loop(void *arg)
                      * We do not suspend motion detection like we did for lightswitch
                      * because with Round Robin this is controlled by roundrobin_skip.
                      */
-                    if (cnt->conf.switchfilter && cnt->current_image->diffs > cnt->threshold) {
+                    if (cnt->conf.switchfilter && check_threshold(cnt)) {
                         cnt->current_image->diffs = alg_switchfilter(cnt, cnt->current_image->diffs,
                                                                      cnt->current_image->image);
 
@@ -1597,11 +1608,12 @@ static void *motion_loop(void *arg)
                     cnt->threshold = cnt->conf.max_changes;
 
                 /*
-                 * If motion is detected (cnt->current_image->diffs > cnt->threshold) and before we add text to the pictures
+                 * If motion is detected and before we add text to the pictures
                  * we find the center and size coordinates of the motion to be used for text overlays and later
                  * for adding the locate rectangle
                  */
-                if (cnt->current_image->diffs > cnt->threshold)
+
+                if (check_threshold(cnt))
                     alg_locate_center_size(&cnt->imgs, cnt->imgs.width, cnt->imgs.height, &cnt->current_image->location);
 
                 /*
@@ -1612,7 +1624,7 @@ static void *motion_loop(void *arg)
                  * at a constant level.
                  */
 
-                if ((cnt->current_image->diffs > cnt->threshold) && (cnt->conf.lightswitch == 1) &&
+                if (check_threshold(cnt) && (cnt->conf.lightswitch == 1) &&
                     (cnt->lightswitch_framecounter < (cnt->lastrate * 2)) && /* two seconds window only */
                     /* number of changed pixels almost the same in two consecutive frames and */
                     ((abs(previous_diffs - cnt->current_image->diffs)) < (previous_diffs / 15)) &&
@@ -1715,7 +1727,7 @@ static void *motion_loop(void *arg)
 
         /***** MOTION LOOP - ACTIONS AND EVENT CONTROL SECTION *****/
 
-            if (cnt->current_image->diffs > cnt->threshold) {
+            if (check_threshold(cnt)) {
                 /* flag this image, it have motion */
                 cnt->current_image->flags |= IMAGE_MOTION;
                 cnt->lightswitch_framecounter++; /* micro lightswitch */
