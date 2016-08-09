@@ -293,7 +293,8 @@ static void context_destroy(struct context *cnt)
  * cnt->threshold and cnt->upper_threshold
  * initial implementation: cnt->current_image->diffs > cnt->threshold
  */
- static int check_threshold(struct context *cnt) {
+ static int check_threshold(struct context *cnt) 
+ {
     return (cnt->current_image->diffs > cnt->threshold);
  }
 
@@ -1602,10 +1603,11 @@ static void *motion_loop(void *arg)
                  * if we are not threshold tuning lets make sure that remote controlled
                  * changes of threshold are used.
                  */
-                if (cnt->conf.threshold_tune)
+                if (cnt->conf.threshold_tune) {
                     alg_threshold_tune(cnt, cnt->current_image->diffs, cnt->detecting_motion);
-                else
+                } else {
                     cnt->threshold = cnt->conf.max_changes;
+		}
 
                 /*
                  * If motion is detected and before we add text to the pictures
@@ -1613,8 +1615,9 @@ static void *motion_loop(void *arg)
                  * for adding the locate rectangle
                  */
 
-                if (check_threshold(cnt))
+                if (check_threshold(cnt)) {
                     alg_locate_center_size(&cnt->imgs, cnt->imgs.width, cnt->imgs.height, &cnt->current_image->location);
+		}
 
                 /*
                  * Update reference frame.
