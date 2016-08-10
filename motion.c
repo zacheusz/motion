@@ -295,7 +295,8 @@ static void context_destroy(struct context *cnt)
  */
  static int check_threshold(struct context *cnt) 
  {
-    return (cnt->current_image->diffs > cnt->threshold);
+    return (cnt->current_image->diffs > cnt->threshold) 
+     && (!cnt->upper_threshold || cnt->current_image->diffs < cnt->upper_threshold);
  }
 
 /**
@@ -935,6 +936,9 @@ static int motion_init(struct context *cnt)
 
     /* Set threshold value */
     cnt->threshold = cnt->conf.max_changes;
+    cnt->upper_threshold = cnt->conf.upper_threshold;
+    MOTION_LOG(NTC, TYPE_ALL, NO_ERRNO, "%s: threshold:%d, upper threshold:%d",
+                        cnt->threshold, cnt->upper_threshold);
 
     /* Initialize stream server if stream port is specified to not 0 */
     if (cnt->conf.stream_port) {

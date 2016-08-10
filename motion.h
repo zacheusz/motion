@@ -360,6 +360,7 @@ struct context {
 
     int noise;
     int threshold;
+    int upper_threshold;
     int diffs_last[THRESHOLD_TUNE_LENGTH];
     int smartmask_speed;
 
